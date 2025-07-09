@@ -76,7 +76,7 @@ if submitted:
         "Stromwert (/m²)": stromverbrauch / nutzflaeche,
         "Gaswert (/m²)": gaspreis / nutzflaeche,
         "Grundfläche (m²)": grundrisslaenge * grundrissbreite,
-        "Steildach (m²)": math.sqrt((grundrissbreite / 2)² + hoehe_dg * hoehe_dg)*2*10 ,
+        "Steildach (m²)": math.sqrt((grundrissbreite / 2)**2 + hoehe_dg * hoehe_dg)*2*10 ,
         "Flächen_AW": (2*grundrisslaenge + 2*grundrissbreite)*hoehe,
         "Flächen_Giebel": (grundrissbreite*hoehe_dg) / 2,
         "AW Fläche_Gesamt": (2*grundrisslaenge + 2*grundrissbreite)*hoehe + (grundrissbreite*hoehe_dg) / 2,
