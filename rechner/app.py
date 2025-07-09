@@ -60,7 +60,7 @@ with st.form("input_form"):
 
     with Strom:
         st.markdown("### ⚡ Strom")
-        strom = st.number_input("Strom(m)", min_value=0.0)
+        stromverbrauch = st.number_input("Strom(m)", min_value=0.0)
         strompreis = st.number_input("Strompreis (Jahr)", min_value=0.0)
         wasser = st.number_input("Wasserstand (m)", min_value=0.0)
 
@@ -73,44 +73,44 @@ if submitted:
     # Beispiel-Dictionary aus Eingaben (hier kannst du beliebige Berechnungen einfügen!)
     daten = {
         "zusätzl. KW (WW)": 0.25 * personen,
-        "Stromwert (/m²)": strom / nutzflaeche,
+        "Stromwert (/m²)": stromverbrauch / nutzflaeche,
         "Gaswert (/m²)": gaspreis / nutzflaeche,
         "Grundfläche (m²)": grundrisslaenge * grundrissbreite,
         "Steildach (m²)": math.sqrt((grundrissbreite / 2)² + hoehe_dg * hoehe_dg)*2*10 ,
-        "Flächen_AW": None,
-        "Flächen_Giebel": None,
-        "AW Fläche_Gesamt": None,
-        "AW Fläche_Gesamt-Fenster": None,
-        "Betriebsstd._alt": None,
+        "Flächen_AW": (2*grundrisslaenge + 2*grundrissbreite)*hoehe,
+        "Flächen_Giebel": (grundrissbreite*hoehe_dg) / 2,
+        "AW Fläche_Gesamt": (2*grundrisslaenge + 2*grundrissbreite)*hoehe + (grundrissbreite*hoehe_dg) / 2,
+        "AW Fläche_Gesamt-Fenster": ((2*grundrisslaenge + 2*grundrissbreite)*hoehe + (grundrissbreite*hoehe_dg) / 2) - fensterflaeche,
+        "Betriebsstd._alt": gasverbrauch / leistung,
         "Bohrmeter_alt": None,
         "Bohrkosten_alt": None,
         "kg CO2_alt": None,
-        "Heizkosten_alt": round(oelverbrauch * oelpreis + gasverbrauch * gaspreis + pelletverbrauch * pelletpreis, 2),
+        "Heizkosten_alt": gasverbrauch * gaspreis,
         "Heizlast_neu": None,
         "Bohrmeter_neu": None,
         "Bohrkosten_neu": None,
         "Strom_kg CO2 (alt)": None,
-        "Stromkosten_alt": None,
+        "Stromkosten_alt": strompreis * stromverbrauch,
         "Strom_kg CO2 (alt) Öko": None,
         "Stromkosten_alt Öko": None,
         "Heizstrom neu": None,
         "kg CO2": None,
         "kg CO2 (Öko)": None,
-        "Heizkosten neu": None,
-        "Betr.kosten alt vs neu": None,
-        "kg CO2 alt vs neu": None,
-        "kg CO2 alt vs neu (Öko)": None,
+        "Heizkosten neu": strompreis * heizstromneu,
+        "Betr.kosten alt vs neu": gasverbrauch * gaspreis - strompreis * heizstromneu,
+        "kg CO2 alt vs neu": kg_co2_alt - kg_co2 ,
+        "kg CO2 alt vs neu (Öko)": kg_co2_alt - kog_co2_neu_oeko,
         "Kühlstrom neu": None,
         "kg CO2 Kühlung": None,
         "kg CO2 (Öko) Kühlung": None,
-        "Kühlkosten neu": None,
-        "Betr.kosten vs Klima": None,
-        "kg CO2 vs Klima": None,
-        "kg CO2 vs Klima (Öko)": None,
+        "Kühlkosten neu": strompreis * kühlstrom_neu,
+        "Betr.kosten vs Klima": stromkosten - (strompreis * kühlstrom_neu),
+        "kg CO2 vs Klima": kg_co2_klima - kg_co2,
+        "kg CO2 vs Klima (Öko)": kg_co2_oeko_klima - kg_co2_oeko,
         "Stromverbrauch": None,
         "kg CO2 Strom": None,
         "kg CO2 (Öko) Strom": None,
-        "Stromkosten": None
+        "Stromkosten": strompreis * stromverbrauch
     }
 
 
