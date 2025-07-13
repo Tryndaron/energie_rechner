@@ -31,7 +31,7 @@ with st.form("input_form"):
 
         st.markdown("Außenwand")
         art_1 = st.text_input("Art_1")
-        dachhoehe = st.number_input("Höhe_2 (m)", min_value=0.0)
+        außenwandhoehe = st.number_input("Höhe_2 (m)", min_value=0.0)
         sanierung_aw = st.number_input("Letzte Sanierung (Außenwand)", min_value=1900, max_value=2100, step=1)
         art_keller = st.text_input("Art (Kellerdecke)")
         hoehe_keller = st.number_input("Höhe Keller (m)", min_value=0.0)
@@ -57,6 +57,7 @@ with st.form("input_form"):
         gaspreis = st.number_input("Gaspreis (€/kWh)", min_value=0.0)
         pelletverbrauch = st.number_input("Pellets (kg/Jahr)", min_value=0.0)
         pelletpreis = st.number_input("Pelletpreis (€/kg)", min_value=0.0)
+        heiz_last_neu = st.number_input("Leistung (kW)", min_value=0.0)
 
     with Strom:
         st.markdown("### ⚡ Strom")
@@ -66,6 +67,29 @@ with st.form("input_form"):
 
     submitted = st.form_submit_button("Berechne")
 
+
+    #Fixwerte 
+    entzugsleistung = 0.04
+    erdbohrung_kosten = 120
+    energie_quelle_strom = 0.4
+    energie_quelle_oekostrom = 0.03
+    luftwaerme = 2.5
+    klima_leistung = 2.5
+    passive_cooling_leistung = 0.4
+    passive_cooling_stunden = 900
+
+
+
+
+    if heizung == "Gas":
+        kg_co2_alt = gasverbrauch * 0.3
+    elif heizung == "Öl":
+        kg_co2_alt = gasverbrauch * 0.6
+
+
+
+
+
 # Beispiel: Backend-Berechnung (hier Platzhalter – du kannst hier alles definieren)
 if submitted:
     st.subheader("📊 Ergebnis der Berechnung")
@@ -74,42 +98,37 @@ if submitted:
     daten = {
         "zusätzl. KW (WW)": 0.25 * personen,
         "Stromwert (/m²)": stromverbrauch / nutzflaeche,
-        "Gaswert (/m²)": gaspreis / nutzflaeche,
+        "Gaswert (/m²)": gasverbrauch / nutzflaeche,
         "Grundfläche (m²)": grundrisslaenge * grundrissbreite,
         "Steildach (m²)": math.sqrt((grundrissbreite / 2)**2 + hoehe_dg * hoehe_dg)*2*10 ,
-        "Flächen_AW": (2*grundrisslaenge + 2*grundrissbreite)*hoehe,
-        "Flächen_Giebel": (grundrissbreite*hoehe_dg) / 2,
-        "AW Fläche_Gesamt": (2*grundrisslaenge + 2*grundrissbreite)*hoehe + (grundrissbreite*hoehe_dg) / 2,
-        "AW Fläche_Gesamt-Fenster": ((2*grundrisslaenge + 2*grundrissbreite)*hoehe + (grundrissbreite*hoehe_dg) / 2) - fensterflaeche,
+        "Flächen_AW": (2*grundrisslaenge + 2*grundrissbreite) * außenwandhoehe,
+        "Flächen_Giebel": (grundrissbreite*hoehe) / 2,
+        "AW Fläche_Gesamt": (2*grundrisslaenge + 2*grundrissbreite)*außenwandhoehe + (grundrissbreite*hoehe_dg) / 2,
+        "AW Fläche_Gesamt-Fenster": ((2*grundrisslaenge + 2*grundrissbreite)*außenwandhoehe + (grundrissbreite*hoehe) / 2) - fensterflaeche,
         "Betriebsstd._alt": gasverbrauch / leistung,
-        "Bohrmeter_alt": None,
-        "Bohrkosten_alt": None,
-        "kg CO2_alt": None,
+        "kg CO2_alt": kg_co2_alt,
         "Heizkosten_alt": gasverbrauch * gaspreis,
-        "Heizlast_neu": None,
-        "Bohrmeter_neu": None,
-        "Bohrkosten_neu": None,
-        "Strom_kg CO2 (alt)": None,
+        "Heizlast_neu": (0.9 * gasverbrauch / 2400) + (0.25 * personen),
+        "Bohrmeter_neu": heiz_last_neu / entzugsleistung,
+        "Bohrkosten_neu": (heiz_last_neu / entzugsleistung) * erdbohrung_kosten,
+        "Strom_kg CO2 (alt)": stromverbrauch * energie_quelle_strom,
         "Stromkosten_alt": strompreis * stromverbrauch,
-        "Strom_kg CO2 (alt) Öko": None,
-        "Stromkosten_alt Öko": None,
-        "Heizstrom neu": None,
-        "kg CO2": None,
-        "kg CO2 (Öko)": None,
-        "Heizkosten neu": strompreis * heizstromneu,
-        "Betr.kosten alt vs neu": gasverbrauch * gaspreis - strompreis * heizstromneu,
-        "kg CO2 alt vs neu": kg_co2_alt - kg_co2 ,
-        "kg CO2 alt vs neu (Öko)": kg_co2_alt - kog_co2_neu_oeko,
-        "Kühlstrom neu": None,
-        "kg CO2 Kühlung": None,
-        "kg CO2 (Öko) Kühlung": None,
-        "Kühlkosten neu": strompreis * kühlstrom_neu,
-        "Betr.kosten vs Klima": stromkosten - (strompreis * kühlstrom_neu),
-        "kg CO2 vs Klima": kg_co2_klima - kg_co2,
-        "kg CO2 vs Klima (Öko)": kg_co2_oeko_klima - kg_co2_oeko,
-        "Stromverbrauch": None,
-        "kg CO2 Strom": None,
-        "kg CO2 (Öko) Strom": None,
+        "Strom_kg CO2 (alt) Öko": stromverbrauch * energie_quelle_oekostrom,
+        "Heizstrom neu": (0.9 * gasverbrauch) / luftwaerme,
+        "kg CO2": ((0.9 * gasverbrauch) / luftwaerme) * energie_quelle_strom,
+        "kg CO2 (Öko)": ((0.9 * gasverbrauch) / luftwaerme) * energie_quelle_oekostrom,
+        "Heizkosten neu": strompreis * ((0.9 * gasverbrauch) / luftwaerme),
+        "Betr.kosten alt vs neu": gasverbrauch * gaspreis - strompreis * ((0.9 * gasverbrauch) / luftwaerme),
+        "Kühlstrom neu": passive_cooling_stunden * passive_cooling_leistung,
+        "kg CO2 Kühlung": passive_cooling_stunden * passive_cooling_leistung * energie_quelle_strom,
+        "kg CO2 (Öko) Kühlung": passive_cooling_stunden * passive_cooling_leistung * energie_quelle_oekostrom,
+        "Kühlkosten neu": strompreis * passive_cooling_stunden * passive_cooling_leistung,
+        "Betr.kosten vs Klima": (strompreis * stromverbrauch) - (strompreis * passive_cooling_stunden * passive_cooling_leistung),
+        "kg CO2 vs Klima": (klima_leistung * passive_cooling_stunden * energie_quelle_strom) - passive_cooling_stunden * passive_cooling_leistung * energie_quelle_strom,
+        "kg CO2 vs Klima (Öko)": (klima_leistung * passive_cooling_stunden * energie_quelle_strom) - (passive_cooling_stunden * passive_cooling_leistung * energie_quelle_oekostrom),
+        "Stromverbrauch Klima": klima_leistung * passive_cooling_stunden,
+        "kg CO2 Strom Klima": klima_leistung * passive_cooling_stunden * energie_quelle_strom,
+        "kg CO2 (Öko) Strom Klima": klima_leistung * passive_cooling_stunden * energie_quelle_oekostrom,
         "Stromkosten": strompreis * stromverbrauch
     }
 
