@@ -57,7 +57,7 @@ with st.form("input_form"):
         gaspreis = st.number_input("Gaspreis (€/kWh)", min_value=0.0)
         pelletverbrauch = st.number_input("Pellets (kg/Jahr)", min_value=0.0)
         pelletpreis = st.number_input("Pelletpreis (€/kg)", min_value=0.0)
-        heiz_last_neu = st.number_input("Leistung (kW)", min_value=0.0)
+        heiz_last_neu = st.number_input("Heiz-Leistung (kW)", min_value=0.0)
 
     with Strom:
         st.markdown("### ⚡ Strom")
@@ -68,31 +68,30 @@ with st.form("input_form"):
     submitted = st.form_submit_button("Berechne")
 
 
-    #Fixwerte 
-    entzugsleistung = 0.04
-    erdbohrung_kosten = 120
-    energie_quelle_strom = 0.4
-    energie_quelle_oekostrom = 0.03
-    luftwaerme = 2.5
-    klima_leistung = 2.5
-    passive_cooling_leistung = 0.4
-    passive_cooling_stunden = 900
+#Fixwerte 
+entzugsleistung = 0.04
+erdbohrung_kosten = 120
+energie_quelle_strom = 0.4
+energie_quelle_oekostrom = 0.03
+luftwaerme = 2.5
+klima_leistung = 2.5
+passive_cooling_leistung = 0.4
+passive_cooling_stunden = 900
 
 
 
 
-    if heizung == "Gas":
-        kg_co2_alt = gasverbrauch * 0.3
-    elif heizung == "Öl":
-        kg_co2_alt = gasverbrauch * 0.6
-
-
+if heizung == "Gas":
+    kg_co2_alt = gasverbrauch * 0.3
+elif heizung == "Öl":
+    kg_co2_alt = gasverbrauch * 0.6
 
 
 
 # Beispiel: Backend-Berechnung (hier Platzhalter – du kannst hier alles definieren)
 if submitted:
     st.subheader("📊 Ergebnis der Berechnung")
+
 
     # Beispiel-Dictionary aus Eingaben (hier kannst du beliebige Berechnungen einfügen!)
     daten = {
