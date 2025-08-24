@@ -6,12 +6,19 @@ import json
 
 FILE = "saved_values.json"
 
-if "initialized" not in st.session_state:
+
+
+if "initialized" not in st.session_state:  # Nur beim ersten Start
     if os.path.exists(FILE):
-        with open(FILE, "r") as f:
-            saved_values = json.load(f)
-            st.session_state.update(saved_values)  # Alte Werte in den Session-State
+        try:
+            with open(FILE, "r") as f:
+                saved_values = json.load(f)
+                st.session_state.update(saved_values)
+        except Exception as e:
+            st.warning(f"⚠️ Fehler beim Laden: {e}")
     st.session_state.initialized = True
+
+
 
 
 
@@ -22,63 +29,64 @@ st.title("🏗️ Gebäudeberechnung")
 # Eingabeformulare
 with st.form("input_form"):
     st.subheader("🔢 Gebäudeparameter")
+    try:
+        Grunddaten, Gebäudezustand, Beheizung, Strom = st.columns(4)
+        with Grunddaten:
+            st.markdown("### 🏠 Grunddaten")
+            baujahr = st.number_input("Baujahr", min_value=1800, max_value=2100, step=1, key="baujahr")
+            personen = st.number_input("Personenzahl", min_value=1, step=1, key="personen")
+            wohneinheiten = st.number_input("Wohneinheiten", min_value=1, step=1, key="wohneinheiten")
+            nutzflaeche = st.number_input("Nutzfläche (m²)", min_value=1.0, key="nutzflaeche")
 
-    Grunddaten, Gebäudezustand, Beheizung, Strom = st.columns(4)
-    with Grunddaten:
-        st.markdown("### 🏠 Grunddaten")
-        baujahr = st.number_input("Baujahr", min_value=1800, max_value=2100, step=1)
-        personen = st.number_input("Personenzahl", min_value=1, step=1)
-        wohneinheiten = st.number_input("Wohneinheiten", min_value=1, step=1)
-        nutzflaeche = st.number_input("Nutzfläche (m²)", min_value=1.0)
-        
+        with Gebäudezustand:
+            st.markdown("### 🧱 Gebäudezustand")
+            grundrisslaenge = st.number_input("Grundrisslänge (m)", min_value=1.0, key="grundrisslaenge")
+            grundrissbreite = st.number_input("Grundrissbreite (m)", min_value=1.0, key="grundrissbreite")
 
-    with Gebäudezustand:
-        st.markdown("### 🧱 Gebäudezustand")
-        grundrisslaenge = st.number_input("Grundrisslänge (m)", min_value=1.0)
-        grundrissbreite = st.number_input("Grundrissbreite (m)", min_value=1.0)
+            st.markdown("### Dach + DG")
+            art = st.selectbox("Art (z. B. EFH, MFH, etc.)", ["EFH", "MFH", "Reihenhaus", "Mehrgeschossig"], key="art")
+            hoehe = st.number_input("Höhe (m)", min_value=0.0, key="hoehe")
+            sanierung = st.number_input("Letzte Sanierung (Jahr)", min_value=1900, max_value=2100, step=1, key="sanierung")
+            beheizt = st.selectbox("Beheizt", ["Ja", "Nein"], key="beheizt")
+            hoehe_dg = st.number_input("Höhe Dachgeschoss (m)", min_value=0.0, key="hoehe_dg")
 
-        st.markdown("### Dach + DG")
-        art = st.selectbox("Art (z. B. EFH, MFH, etc.)", ["EFH", "MFH", "Reihenhaus", "Mehrgeschossig"])
-        hoehe = st.number_input("Höhe (m)", min_value=0.0)
-        sanierung = st.number_input("Letzte Sanierung (Jahr)", min_value=1900, max_value=2100, step=1)
-        beheizt = st.selectbox("Beheizt", ["Ja", "Nein"])
-        hoehe_dg = st.number_input("Höhe Dachgeschoss (m)", min_value=0.0)
+            st.markdown("Außenwand")
+            art_1 = st.text_input("Art_1", key="art_1")
+            außenwandhoehe = st.number_input("Höhe_2 (m)", min_value=0.0, key="aussenwandhoehe")
+            sanierung_aw = st.number_input("Letzte Sanierung (Außenwand)", min_value=1900, max_value=2100, step=1, key="sanierung_aw")
+            art_keller = st.text_input("Art (Kellerdecke)", key="art_keller")
+            hoehe_keller = st.number_input("Höhe Keller (m)", min_value=0.0, key="hoehe_keller")
+            sanierung_kd = st.number_input("Letzte Sanierung (Kellerdecke)", min_value=1900, max_value=2100, step=1, key="sanierung_kd")
 
-        st.markdown("Außenwand")
-        art_1 = st.text_input("Art_1")
-        außenwandhoehe = st.number_input("Höhe_2 (m)", min_value=0.0)
-        sanierung_aw = st.number_input("Letzte Sanierung (Außenwand)", min_value=1900, max_value=2100, step=1)
-        art_keller = st.text_input("Art (Kellerdecke)")
-        hoehe_keller = st.number_input("Höhe Keller (m)", min_value=0.0)
-        sanierung_kd = st.number_input("Letzte Sanierung (Kellerdecke)", min_value=1900, max_value=2100, step=1)
+            st.markdown("### Fenster")
+            art_3 = st.text_input("Art_3", key="art_3")
+            fensterflaeche = st.number_input("Fensterfläche gesamt (m²)", min_value=0.0, key="fensterflaeche")
+            sanierung_fenster = st.number_input("Letzte Sanierung (Fenster)", min_value=1900, max_value=2100, step=1, key="sanierung_fenster")
+            
+        with Beheizung:
+            st.markdown("### 🔥 Beheizung")
+            heizung = st.selectbox("Heizung", ["Gas", "Öl", "Wärmepumpe", "Pellet", "Fernwärme", "Elektro", "Sonstige"], key="heizung")
+            heiz_baujahr = st.number_input("Baujahr Heizung", min_value=1900, max_value=2100, step=1, key="heiz_baujahr")
+            leistung = st.number_input("Leistung (kW)", min_value=0.0, key="leistung")
+            waermeabgabe = st.text_input("Wärmeabgabe (z. B. Heizkörper, FBH)", key="waermeabgabe")
+            vorlauf_heizung = st.number_input("Vorlauftemperatur Heizung (°C)", min_value=0.0, key="vorlauf_heizung")
+            vorlauf_ww = st.number_input("Vorlauftemperatur Warmwasser (°C)", min_value=0.0, key="vorlauf_ww")
+            oelverbrauch = st.number_input("Öl (Liter/Jahr)", min_value=0.0, key="oelverbrauch")
+            oelpreis = st.number_input("Ölpreis (€/Liter)", min_value=0.0, key="oelpreis")
+            gasverbrauch = st.number_input("Gas (kWh/Jahr)", min_value=0.0, key="gasverbrauch")
+            gaspreis = st.number_input("Gaspreis (€/kWh)", min_value=0.0, key="gaspreis")
+            pelletverbrauch = st.number_input("Pellets (kg/Jahr)", min_value=0.0, key="pelletverbrauch")
+            pelletpreis = st.number_input("Pelletpreis (€/kg)", min_value=0.0, key="pelletpreis")
+            heiz_last_neu = st.number_input("Heiz-Leistung (kW)", min_value=0.0, key="heiz_last_neu")
 
-        st.markdown("### Fenster")
-        art_3 = st.text_input("Art_3")
-        fensterflaeche = st.number_input("Fensterfläche gesamt (m²)", min_value=0.0)
-        sanierung_fenster = st.number_input("Letzte Sanierung (Fenster)", min_value=1900, max_value=2100, step=1)
-        
+        with Strom:
+            st.markdown("### ⚡ Strom")
+            stromverbrauch = st.number_input("Strom(m)", min_value=0.0, key="stromverbrauch")
+            strompreis = st.number_input("Strompreis (Jahr)", min_value=0.0, key="strompreis")
+            wasser = st.number_input("Wasserstand (m)", min_value=0.0, key="wasser")
 
-    with Beheizung:
-        st.markdown("### 🔥 Beheizung")
-        heizung = st.selectbox("Heizung", ["Gas", "Öl", "Wärmepumpe", "Pellet", "Fernwärme", "Elektro", "Sonstige"])
-        heiz_baujahr = st.number_input("Baujahr Heizung", min_value=1900, max_value=2100, step=1)
-        leistung = st.number_input("Leistung (kW)", min_value=0.0)
-        waermeabgabe = st.text_input("Wärmeabgabe (z. B. Heizkörper, FBH)")
-        vorlauf_heizung = st.number_input("Vorlauftemperatur Heizung (°C)", min_value=0.0)
-        vorlauf_ww = st.number_input("Vorlauftemperatur Warmwasser (°C)", min_value=0.0)
-        oelverbrauch = st.number_input("Öl (Liter/Jahr)", min_value=0.0)
-        oelpreis = st.number_input("Ölpreis (€/Liter)", min_value=0.0)
-        gasverbrauch = st.number_input("Gas (kWh/Jahr)", min_value=0.0)
-        gaspreis = st.number_input("Gaspreis (€/kWh)", min_value=0.0)
-        pelletverbrauch = st.number_input("Pellets (kg/Jahr)", min_value=0.0)
-        pelletpreis = st.number_input("Pelletpreis (€/kg)", min_value=0.0)
-        heiz_last_neu = st.number_input("Heiz-Leistung (kW)", min_value=0.0)
-
-    with Strom:
-        st.markdown("### ⚡ Strom")
-        stromverbrauch = st.number_input("Strom(m)", min_value=0.0)
-        strompreis = st.number_input("Strompreis (Jahr)", min_value=0.0)
-        wasser = st.number_input("Wasserstand (m)", min_value=0.0)
+    except Exception as e:
+        st.error(f"⚠️ Fehler bei der Eingabe: {e}")
 
     submitted = st.form_submit_button("Berechne")
 
@@ -105,11 +113,19 @@ elif heizung == "Öl":
     kg_co2_alt = gasverbrauch * 0.6
 
 
+FIELDS = ["baujahr", "personen", "wohneinheiten", "nutzflaeche", 
+          "grundrisslaenge", "grundrissbreite", "heizung", "stromverbrauch"]
+
+if submitted:
+    values_to_save = {k: st.session_state[k] for k in FIELDS if k in st.session_state}
+    with open(FILE, "w") as f:
+        json.dump(values_to_save, f)
+
+
+
 
 # Beispiel: Backend-Berechnung (hier Platzhalter – du kannst hier alles definieren)
 if submitted:
-    with open(FILE, "w") as f:
-        json.dump(st.session_state.to_dict(), f)
 
     st.subheader("📊 Ergebnis der Berechnung")
 
