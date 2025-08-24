@@ -1,6 +1,21 @@
 import streamlit as st
 import pandas as pd
 import math
+import os
+import json
+
+FILE = "saved_values.json"
+
+if "initialized" not in st.session_state:
+    if os.path.exists(FILE):
+        with open(FILE, "r") as f:
+            saved_values = json.load(f)
+            st.session_state.update(saved_values)  # Alte Werte in den Session-State
+    st.session_state.initialized = True
+
+
+
+
 
 st.title("🏗️ Gebäudeberechnung")
 
@@ -68,6 +83,9 @@ with st.form("input_form"):
     submitted = st.form_submit_button("Berechne")
 
 
+
+
+
 #Fixwerte 
 entzugsleistung = 0.04
 erdbohrung_kosten = 120
@@ -90,6 +108,9 @@ elif heizung == "Öl":
 
 # Beispiel: Backend-Berechnung (hier Platzhalter – du kannst hier alles definieren)
 if submitted:
+    with open(FILE, "w") as f:
+        json.dump(st.session_state.to_dict(), f)
+
     st.subheader("📊 Ergebnis der Berechnung")
 
 
