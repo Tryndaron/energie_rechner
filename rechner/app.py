@@ -93,6 +93,18 @@ if os.path.exists(FILE):
 st.title("🏗️ Gebäudeberechnung")
 
 # --- Eingaben ---
+
+with st.expander("Kontaktdaten", expanded=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        Vorname = st.text_input("Vorname", key="Vorname")
+        Nachname = st.text_input("Nachname", key="Nachname")
+        Adresse = st.text_input("Adresse", key="adresse")
+        Telefon = st.text_input("Telefon",  key="telefon")
+        E_Mail = st.text_input("E-Mail", key="email")
+    
+
+
 with st.expander("🏠 Grunddaten", expanded=True):
     col1, col2 = st.columns(2)
     with col1:
