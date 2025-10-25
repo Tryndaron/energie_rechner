@@ -8,6 +8,8 @@ from io import BytesIO
 import tempfile
 import plotly.express as px
 import plotly.graph_objects as go
+import fixwerte  # Importiere Fixwerte aus separater Datei
+from fixwerte import df_u_werte
 
 
 
@@ -65,14 +67,6 @@ def safe_text(text: str) -> str:
 FILE = "saved_values.json"
 
 # --- gespeicherte Werte laden ---
-""" if os.path.exists(FILE):
-    try:
-        with open(FILE, "r") as f:
-            saved_values = json.load(f)
-            st.session_state.update(saved_values)
-    except Exception as e:
-        st.warning(f"⚠️ Fehler beim Laden: {e}") """
-
 
 
 if os.path.exists(FILE):
@@ -90,7 +84,7 @@ if os.path.exists(FILE):
 
 
 
-st.title("🏗️ Gebäudeberechnung")
+st.title(" Gebäudeberechnung")
 
 # --- Eingaben ---
 
@@ -105,64 +99,145 @@ with st.expander("Kontaktdaten", expanded=True):
     
 
 
-with st.expander("🏠 Grunddaten", expanded=True):
+with st.expander("Allgemein"):
     col1, col2 = st.columns(2)
     with col1:
-        baujahr = st.number_input("Baujahr", min_value=1800, max_value=2100, step=1, key="baujahr")
+        baujahr =  st.selectbox("Baujahr", [" ", "bis 1918", "ab 1919", "ab 1949", "ab 1958", "ab 1969", "ab 1979", "ab 1984", "ab 1995", 2003] )   #st.number_input("Baujahr", min_value=1800, max_value=2100, step=1, key="baujahr")
         personen = st.number_input("Personenzahl", min_value=1, step=1, key="personen")
         wohneinheiten = st.number_input("Wohneinheiten", min_value=1, step=1, key="wohneinheiten")
-    with col2:
-        nutzflaeche = st.number_input("Nutzfläche (m²)", min_value=1.0, key="nutzflaeche")
+        wohnflaeche = st.number_input("Wohnfläche (m²)", min_value=1.0, key="wohnflaeche")
+        grundrisslaenge = st.number_input("Grundrisslänge (m) (Auch für weitere Rechnungen wichtig !)", min_value=1.0, key="grundrisslaenge_allg")
+        grundrissbreite = st.number_input("Grundrissbreite (m)", min_value=1.0, key="grundrissbreite_allg")
+        freistehend = st.selectbox("Freistehend", ["Ja", "1-Seitig angebaut", "2-Seitig angebaut"], key="freistehend")
+    
 
-with st.expander("🧱 Gebäudezustand"):
+with st.expander("Dach + Dachgeschoss"):
     col1, col2 = st.columns(2)
     with col1:
-        grundrisslaenge = st.number_input("Grundrisslänge (m)", min_value=1.0, key="grundrisslaenge")
-        grundrissbreite = st.number_input("Grundrissbreite (m)", min_value=1.0, key="grundrissbreite")
-        hoehe = st.number_input("Höhe (m)", min_value=0.0, key="hoehe")
-        hoehe_dg = st.number_input("Höhe Dachgeschoss (m)", min_value=1.0, key="hoehe_dg")
-        dachart = st.selectbox("Art", ["EFH", "MFH", "Reihenhaus", "Mehrgeschossig"], key="art")
-        beheizt = st.selectbox("Beheizt", ["Ja", "Nein"], key="beheizt")
-        sanierung = st.number_input("Letzte Sanierung (Jahr)", min_value=1900, max_value=2100, step=1, key="sanierung")
-    with col2:
-        st.markdown("**Außenwand**")
-        art_1 = st.text_input("Art_1", key="art_1")
-        außenwandhoehe = st.number_input("Höhe Außenwand (m)", min_value=0.0, key="aussenwandhoehe")
-        sanierung_aw = st.number_input("Letzte Sanierung (Außenwand)", min_value=1900, max_value=2100, step=1, key="sanierung_aw")
-        art_keller = st.text_input("Art (Kellerdecke)", key="art_keller")
-        hoehe_keller = st.number_input("Höhe Keller (m)", min_value=0.0, key="hoehe_keller")
-        sanierung_kd = st.number_input("Letzte Sanierung (Kellerdecke)", min_value=1900, max_value=2100, step=1, key="sanierung_kd")
+        Art = st.text_input("Art", key="dach_art")
+        dachneigung = st.number_input("Dachneigung (°)", min_value=0.0, max_value=90.0, key="dachneigung")
+        dach_hoehe = st.number_input("Dachhöhe (m)", min_value=1.0, key="dach_hoehe")
+        dach_dicke = st.number_input("Dachdicke (m)", min_value=0.0, key="dach_dicke")
+        letzte_sanierung_dach = st.number_input("Letzte Sanierung (Dach)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_dach")
+        beheizt = st.selectbox("Beheizt", ["Ja", "Nein"], key="dach_beheizt")
+        Hoehe_dachboden = st.number_input("Höhe Dachboden (m)", min_value=1.0, key="hoehe_dachboden")
+        hoehe_dachgeschoss = st.number_input("Höhe Dachgeschoss (m)", min_value=1.0, key="hoehe_dachgeschoss")
+        ogd_gedämmt = st.selectbox("Oberste Geschossdecke gedämmt", ["Ja", "Nein"], key="ogd_gedämmt")
+        kniestochhoehe = st.number_input("Kniestockhöhe (m)", min_value=0.0, key="kniestockhoehe")
 
-        st.markdown("**Fenster**")
-        art_3 = st.text_input("Art_3", key="art_3")
-        fensterflaeche = st.number_input("Fensterfläche gesamt (m²)", min_value=1.0, key="fensterflaeche")
-        sanierung_fenster = st.number_input("Letzte Sanierung (Fenster)", min_value=1900, max_value=2100, step=1, key="sanierung_fenster")
-
-with st.expander("🔥 Beheizung"):
+with st.expander("Gauben"):
     col1, col2 = st.columns(2)
     with col1:
-        heizung = st.selectbox("Heizung", ["Gas", "Öl", "Wärmepumpe", "Pellet", "Fernwärme", "Elektro", "Sonstige"], key="heizung")
-        heiz_baujahr = st.number_input("Baujahr Heizung", min_value=1900, max_value=2100, step=1, key="heiz_baujahr")
-        leistung = st.number_input("Leistung (kW)", min_value=1.0, key="leistung")
-        heiz_last_neu = st.number_input("Heiz-Leistung (kW)", min_value=0.0, key="heiz_last_neu")
-    with col2:
-        waermeabgabe = st.text_input("Wärmeabgabe (z. B. Heizkörper, FBH)", key="waermeabgabe")
-        vorlauf_heizung = st.number_input("Vorlauftemperatur Heizung (°C)", min_value=1.0, key="vorlauf_heizung")
-        vorlauf_ww = st.number_input("Vorlauftemperatur Warmwasser (°C)", min_value=1.0, key="vorlauf_ww")
-        oelverbrauch = st.number_input("Öl (Liter/Jahr)", min_value=1.0, key="oelverbrauch")
-        oelpreis = st.number_input("Ölpreis (€/Liter)", min_value=1.0, key="oelpreis")
-        gasverbrauch = st.number_input("Gas (kWh/Jahr)", min_value=1.0, key="gasverbrauch")
-        gaspreis = st.number_input("Gaspreis (€/kWh)", min_value=0.0, key="gaspreis")
-        pelletverbrauch = st.number_input("Pellets (kg/Jahr)", min_value=1.0, key="pelletverbrauch")
-        pelletpreis = st.number_input("Pelletpreis (€/kg)", min_value=1.0, key="pelletpreis")
+        gauben_wand_breite = st.number_input("Breite (m)", min_value=1.0, key="gaube_breite")
+        gauben_wand_hoehe = st.number_input("Höhe (m)", min_value=1.0, key="hoehe_gaube")
+        gauben_wand_tiefe = st.number_input("Tiefe (m)", min_value=1.0, key="gaube_tiefe")
 
-with st.expander("⚡ Strom"):
+
+with st.expander("Außenwand Nord (Falls die Außenwände alle gleich sind, die Gesamtlänge aller Außenwände hier eintragen)"):
+    col1, col2 = st.columns(2)
+    with col1:
+        Hoehe_außenwand_nord = st.number_input("Höhe (m)", min_value=0.0, key="hoehe_aussenwand")
+        Laenge_außenwand_nord = st.number_input("Länge (m)", min_value=1.0, key="laenge_aussenwand_nord")
+        dicke_außenwand_nord = st.number_input("Dicke (m)", min_value=0.0, key="dicke_aussenwand_nord")
+        letzte_sanierung_außenwand_nord = st.number_input("Letzte Sanierung (Außenwand 1)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_außenwand_nord")
+        luftschicht_vorhanden_nord = st.selectbox("Luftschicht vorhanden", ["Ja", "Nein"], key="luftschicht_vorhanden_nord")
+
+
+with st.expander("Außenwand Ost"):
+    col1, col2 = st.columns(2)
+    with col1:
+        Hoehe_außenwand_ost = st.number_input("Höhe (m)", min_value=0.0, key="hoehe_aussenwand_ost")
+        Laenge_außenwand_ost = st.number_input("Länge (m)", min_value=0.0, key="laenge_aussenwand_ost")
+        dicke_außenwand_ost = st.number_input("Dicke (m)", min_value=0.0, key="dicke_aussenwand_ost")
+        letzte_sanierung_außenwand_ost = st.number_input("Letzte Sanierung (Außenwand 2)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_außenwand_ost")
+        luftschicht_vorhanden_ost = st.selectbox("Luftschicht vorhanden", ["Ja", "Nein"], key="luftschicht_vorhanden_ost")
+
+with st.expander("Außenwand Süd"):
+    col1, col2 = st.columns(2)
+    with col1:
+        Hoehe_außenwand_sued = st.number_input("Höhe (m)", min_value=0.0, key="hoehe_aussenwand Süd")
+        Laenge_außenwand_sued = st.number_input("Länge (m)", min_value=0.0, key="laenge_aussenwand sued")
+        dicke_außenwand_sued = st.number_input("Dicke (m)", min_value=0.0, key="dicke_aussenwand sued")
+        letzte_sanierung_sued = st.number_input("Letzte Sanierung (Außenwand 2)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_außenwand sued")
+        luftschicht_sued = st.selectbox("Luftschicht vorhanden", ["Ja", "Nein"], key="luftschicht_vorhandensued")
+
+with st.expander("Außenwand West"):
+    col1, col2 = st.columns(2)
+    with col1:
+        Hoehe_außenwand_west = st.number_input("Höhe (m)", min_value=0.0, key="hoehe_aussenwand West")
+        Laenge_außenwand_west = st.number_input("Länge (m)", min_value=0.0, key="laenge_aussenwand West")
+        dicke_außenwand_west = st.number_input("Dicke (m)", min_value=0.0, key="dicke_aussenwand West")
+        letzte_sanierung_west = st.number_input("Letzte Sanierung (Außenwand West)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_außenwand_west")
+        luftschicht_west = st.selectbox("Luftschicht vorhanden", ["Ja", "Nein"], key="luftschicht_vorhanden_west")
+
+with st.expander("Kellerdecke"):
+    col1, col2 = st.columns(2)
+    with col1:
+        art_kellerdecke = st.text_input("Art", key="art_kellerdecke")
+        Hoehe_kellergeschoß = st.number_input("Höhe Kellergeschoss (m)", min_value=0.0, key="hoehe_kellergeschoss")
+        letzte_sanierung_kellerdecke = st.number_input("Letzte Sanierung (Kellerdecke)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_kellerdecke")
+
+with st.expander("Fenster"):
+    col1, col2 = st.columns(2)
+    with col1:
+        art_fenster = st.text_input("Art", key="art_fenster")
+        fenster_flaeche = st.number_input("Fensterfläche gesamt (m²)", min_value=1.0, key="fensterflaeche_allg")
+        letzte_sanierung_fenster = st.number_input("Letzte Sanierung (Fenster)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_fenster")
+
+
+with st.expander("Dachfenster"):
+    col1, col2 = st.columns(2)
+    with col1:
+        art_dachfenster = st.text_input("Art", key="art_dachfenster")
+        dachfenster_flaeche = st.number_input("Dachfensterfläche gesamt (m²)", min_value=0.0, key="dachfenster_flaeche")
+        letzte_sanierung_dachfenster = st.number_input("Letzte Sanierung (Dachfenster)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_dachfenster")
+
+
+with st.expander("Außentüren"):
+    col1, col2 = st.columns(2)
+    with col1:
+        tuerflaeche_gesamt = st.number_input("Türfläche gesamt (m²)", min_value=1.0, key="tuerflaeche_gesamt")
+        letzte_sanierung_tueren = st.number_input("Letzte Sanierung (Türen)", min_value=1900, max_value=2100, step=1, key="letzte_sanierung_tueren")
+
+
+with st.expander("Keller (Kellerräume wenn sie beheizt sind)"):
+    col1, col2 = st.columns(2)
+    with col1:
+        kelleraußenwand_Breite = st.number_input("Kelleraußenwand Breite (m)", min_value=0.0, key="kelleraußenwand_breite")
+        kellerinnenwand_Breite = st.number_input("Kellerinnenwand Höhe (m)", min_value=0.0, key="kellerinnenwand_breite")
+        keller_geschoss_hoehe = st.number_input("Kellergeschoss Höhe (m)", min_value=0.0, key="kellergeschoss_hoehe")
+        #beheizte_kellerflaeche = st.number_input("Beheizte Kellerfläche (m²)", min_value=0.0, key="beheizte_kellerflaeche")
+        kellertuer_fläche = st.number_input("Kellertür Fläche (m²)", min_value=0.0, key="kellertuer_flaeche")
+        kellerfenster_flaeche = st.number_input("Kellerfenster Fläche (m²)", min_value=0.0, key="kellerfenster_flaeche")
+
+
+with st.expander("Heizung"):
+    col1, col2 = st.columns(2)
+    with col1:
+        heizung_typ = st.selectbox("Heizungstyp", ["Gas", "Öl", "Wärmepumpe", "Pellet", "Fernwärme", "Elektro", "Sonstige"], key="heizung_typ")
+        heizung_baujahr = st.number_input("Baujahr Heizung", min_value=1900, max_value=2100, step=1, key="heizung_baujahr")
+        heizung_leistung = st.number_input("Leistung (kW)", min_value=1.0, key="heizung_leistung")
+        waermeabgabe = st.selectbox("Wäremabgabe", ["1-fach", "2-fach (standard)", "3-fach (selten)", "4-fach(sehr selten)"], key="waermeabgabe_typ")
+        vorlauftemperatur_heizung = st.number_input("Vorlauftemperatur Heizung (°C)", min_value=1.0, key="vorlauftemperatur_heizung")
+        vorlauftemperatur_warmwasser = st.number_input("Vorlauftemperatur Warmwasser (°C)", min_value=1.0, key="vorlauftemperatur_warmwasser")
+        Oel = st.number_input("Öl (Liter/Jahr)", min_value=1.0, key="oel_verbrauch")
+        Oel_preis = st.number_input("Ölpreis (€/Liter)", min_value=1.0, key="oel_preis")
+        Gas = st.number_input("Gas (kWh/Jahr)", min_value=1.0, key="gas_verbrauch")
+        Gas_preis = st.number_input("Gaspreis (€/kWh)", min_value=0.0, key="gas_preis")
+        Pellet = st.number_input("Pellets (kg/Jahr)", min_value=1.0, key="pellet_verbrauch")
+        Pellet_preis = st.number_input("Pelletpreis (€/kg)", min_value=1.0, key="pellet_preis")
+        Kohle = st.number_input("Kohle (kg/Jahr)", min_value=1.0, key="kohle_verbrauch")
+        Kohle_preis = st.number_input("Kohlepreis (€/kg)", min_value=1.0, key="kohle_preis")
+
+
+
+with st.expander("Strom"):
     col1, col2 = st.columns(2)
     with col1:
         stromverbrauch = st.number_input("Stromverbrauch (kWh/Jahr)", min_value=1.0, key="stromverbrauch")
         strompreis = st.number_input("Strompreis (€/kWh)", min_value=0.0, key="strompreis")
     with col2:
-        wasser = st.number_input("Wasserstand (m)", min_value=1.0, key="wasser")
+        wasserverbrauch = st.number_input("Wasserverbrauch (m)", min_value=1.0, key="wasserverbrauch")
 
 # --- Button ---
 submitted = st.button("💾 Berechne")
@@ -182,132 +257,144 @@ klima_leistung = 2.5
 passive_cooling_leistung = 0.4
 passive_cooling_stunden = 900
 
-if heizung == "Gas":
-    kg_co2_alt = gasverbrauch * 0.25
-elif heizung == "Öl":
-    kg_co2_alt = gasverbrauch * 0.6
+faktor = 1.0
+freistehend_faktor = 1.0
+
+if freistehend == "Ja":
+    freistehend_faktor = 1.0
+elif freistehend == "1-Seitig angebaut":
+    freistehend_faktor = 2
 else:
-    kg_co2_alt = 0
+    faktor = 0
+
+    
+
+
+
 
 # Beispiel: Backend-Berechnung
 if submitted:
-    st.subheader("📊 Ergebnis der Berechnung")
+    
 
-    daten = {
-        "Zusätzliche KW für Warmwasser": 0.25 * personen,
-        "Stromwert (/m²)": stromverbrauch / nutzflaeche,
-        "Gaswert (/m²)": gasverbrauch / nutzflaeche,
-        "Grundfläche (m²)": grundrisslaenge * grundrissbreite,
-        "Steildach (m²)": math.sqrt((grundrissbreite / 2)**2 + hoehe_dg**2)*2*10,
-        "Flächen_AW": (2*grundrisslaenge + 2*grundrissbreite) * außenwandhoehe,
-        "Flächen_Giebel": (grundrissbreite*hoehe) / 2,
-        "AW Fläche_Gesamt": ((grundrissbreite*hoehe)/2) + ((2*grundrisslaenge + 2*grundrissbreite) * außenwandhoehe),
-        "AW Fläche_Gesamt-Fenster": ((2*grundrisslaenge + 2*grundrissbreite)*außenwandhoehe + (grundrissbreite*hoehe) / 2) - fensterflaeche,
-        "Betriebsstd._alt": gasverbrauch / leistung,
-        "CO2_Emissionen (Heizung IST)": kg_co2_alt,
-        "Heizkosten(IST)": gasverbrauch * gaspreis,
-        "Heizlast(SOLL)": (0.9 * gasverbrauch / 2400) + (0.25 * personen),
-        "Bohrmeter(SOLL)": ((0.9 * gasverbrauch / 2400) + (0.25 * personen)) / entzugsleistung,
-        "Bohrkosten(SOLL)": (((0.9 * gasverbrauch / 2400) + (0.25 * personen)) / entzugsleistung) * erdbohrung_kosten,
-        "CO2_Emissionen(Strom IST)": stromverbrauch * energie_quelle_strom,
-        "Stromkosten(IST)": strompreis * stromverbrauch,
-        "CO2_Emissionen(Ökostrom IST)": stromverbrauch * energie_quelle_oekostrom,
-        "Heizstrom(Luftwäremepumpe)": (0.9 * gasverbrauch) / luftwaerme,
-        "CO2_Emissionen(Luftwäremepumpe)": ((0.9 * gasverbrauch) / luftwaerme) * energie_quelle_strom,
-        "CO2_Emissionen(Ökostrom_Luftwäremepumpe)": ((0.9 * gasverbrauch) / luftwaerme) * energie_quelle_oekostrom,
-        "Heizkosten(Luftwärmepumpe)": strompreis * ((0.9 * gasverbrauch) / luftwaerme),
-        "Betriebskostenerparnis(ISTvsLuftwäremepumpe)": gasverbrauch * gaspreis - strompreis * ((0.9 * gasverbrauch) / luftwaerme),
-        "Kühlstrom(Passivekühlung)": passive_cooling_stunden * passive_cooling_leistung,
-        "CO2_Emissionen(Passivekühlstrom)": passive_cooling_stunden * passive_cooling_leistung * energie_quelle_strom,
-        "kgCO2(Öko)Kühlung": passive_cooling_stunden * passive_cooling_leistung * energie_quelle_oekostrom,
-        "Kühlkostenneu": strompreis * passive_cooling_stunden * passive_cooling_leistung,
-        "Betriebskostenersparnis(Klimaanlage-Passivkühlung)": (strompreis * stromverbrauch) - (strompreis * passive_cooling_stunden * passive_cooling_leistung),
-        "Differenz CO2-Emissionen (Klimaalnlage-Passivkühlung)": (klima_leistung * passive_cooling_stunden * energie_quelle_strom) - passive_cooling_stunden * passive_cooling_leistung * energie_quelle_strom,
-        "Differenz CO2_Emissionen (Klimaanlage-Passivkühlung_mit_Ökostrom)": (klima_leistung * passive_cooling_stunden * energie_quelle_oekostrom) - (passive_cooling_stunden * passive_cooling_leistung * energie_quelle_oekostrom),
-        "Kühlstrom(Klima-Split-Gerät)": klima_leistung * passive_cooling_stunden,
-        "CO2_Emissionen(Klima-Split Gerät)": klima_leistung * passive_cooling_stunden * energie_quelle_strom,
-        "CO2_Emissionen Ökostrom(Klima-Split-Gerät)": klima_leistung * passive_cooling_stunden * energie_quelle_oekostrom,
-        "Kühlkosten(Klima-Split-Gerät)": strompreis * (klima_leistung * passive_cooling_stunden)
+    DACH = {
+        "Satteldach": math.sqrt((grundrissbreite /2)**2 + dach_hoehe**2) * grundrisslaenge * 2,
+        "Flachdach": grundrisslaenge * grundrissbreite,
+        "Oberste Geschossdecke": grundrisslaenge * grundrissbreite - 0.5 * (grundrisslaenge - 2*1) * (1 / (math.tan(math.radians(dachneigung)))),  # Annahme: Kniestockhöhe wirkt sich auf die Fläche aus
+        "Oberste Geschossdecke mit Dachschrägenbereich": grundrisslaenge * grundrissbreite + 2 * (grundrisslaenge * (grundrissbreite/2 - 1)) * math.tan(math.radians(dachneigung)) ,  #* (grundrissbreite/(2 - 1)) * math.tan(math.radians(dachneigung)),
+        "Dachschrägenbereich": (grundrisslaenge * grundrissbreite + 2 * (grundrisslaenge * (grundrissbreite/2 - 1)) * math.tan(math.radians(dachneigung))) - (grundrisslaenge * grundrissbreite - 0.5 * (grundrisslaenge - 2*1) * (1 / (math.tan(math.radians(dachneigung))))),           
     }
 
-    df = pd.DataFrame(daten.items(), columns=["Parameter", "Wert"])  
-    st.dataframe(df, use_container_width=True)
+
+if submitted:
+
+    AUẞENWAENDE = {
+        "Außenwand Nord": ((2*grundrisslaenge + 2*grundrissbreite) * (Hoehe_außenwand_nord + kniestochhoehe)) - fenster_flaeche - tuerflaeche_gesamt,
+        "Außenwand Ost": Laenge_außenwand_ost * Hoehe_außenwand_ost,
+        "Außenwand Süd": Laenge_außenwand_sued * Hoehe_außenwand_sued,
+        "Außenwand West": Laenge_außenwand_west * Hoehe_außenwand_west,
+        "Giebelwand": faktor * ((grundrissbreite * dach_hoehe) / freistehend_faktor),
+        "Gaubenwand": (gauben_wand_tiefe * gauben_wand_hoehe),        
+    }
+
+if submitted:
+    FENSTER_TUEREN = {
+        "Dachfenster": dachfenster_flaeche,
+        "Fenster": fenster_flaeche,
+        "Türen": tuerflaeche_gesamt,
+    }
+
+if submitted:
+    KELLER = {
+        "Kellerdecke": grundrisslaenge * grundrissbreite,
+        "Kelleraußenwand_fläche": kelleraußenwand_Breite * keller_geschoss_hoehe, 
+        "Kellerinnenwandfläche": kellerinnenwand_Breite * keller_geschoss_hoehe,
+        "Kellertür Fläche": kellertuer_fläche,
+        "Kellerfenster Fläche": kellerfenster_flaeche,
+    }             
+
+if submitted:
+    GEBAEUDEGESAMTFLAECHE = {
+        "Grundfläche": grundrisslaenge * grundrissbreite,
+        "Hüllfläche oberste Gesfchossdecke": DACH["Oberste Geschossdecke mit Dachschrägenbereich"] + AUẞENWAENDE["Außenwand Nord"] + AUẞENWAENDE["Giebelwand"] + AUẞENWAENDE["Gaubenwand"] + KELLER["Kelleraußenwand_fläche"] + KELLER["Kellerinnenwandfläche"],
+        "Hüllfläche schrägdach": DACH["Dachschrägenbereich"] + AUẞENWAENDE["Außenwand Nord"] + AUẞENWAENDE["Außenwand Ost"] + AUẞENWAENDE["Außenwand Süd"] + AUẞENWAENDE["Außenwand West"] + AUẞENWAENDE["Giebelwand"] + AUẞENWAENDE["Gaubenwand"] + KELLER["Kelleraußenwand_fläche"] + KELLER["Kellerinnenwandfläche"],
+        "Beheizte Fläche": wohnflaeche,
+        "Nutzfläche": wohnflaeche + ((2*grundrisslaenge + 2*grundrissbreite) * dicke_außenwand_nord ),
+    }
+
+if submitted:
+    WAERMEVERLUSTE_ALT = {
+        #"Dach": DACH["Satteldach"] * df_u_werte.loc[df_u_werte[" "] == "Dach", f"{baujahr}"].values[0],
+    }
+
+if submitted:
+    WAERMEVERLUSTE_NEU = {
+        #"Dach": DACH["Satteldach"] * df_u_werte.loc[df_u_werte[" "] == "Dach", f"{baujahr}"].values[0],
+    }
+
+if submitted:
+    TRANSMISSIONSWAERMEVERLUSTE_ALT = {}
+
+if submitted:
+    TRANSMISSIONSWAERMEVERLUSTE_NEU = {}
+
+if submitted:
+    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST_ALT = {}
+
+
+if submitted:
+    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST_NEU = {}
+
+
+if submitted:
+    HUELLFLAECHENVERLUST_ALT = {}
+
+if submitted:
+    HUELFLAECHENVERLUST_NEU = {}
+
+
+if submitted:
+    WAERMEVERLUSTE_IN_KWH_ALT = {}
+
+if submitted:
+    WAERMEVERLUSTE_IN_KWH_NEU = {}
+
+if submitted:
+    EFFIZIENZKLASSE_ALT = {}
+
+if submitted:
+    EFFIZIENZKLASSE_NEU = {}
+
+if submitted:
+    PRIMÄRENERGIEBEDARF_ALT = {}
+
+if submitted:
+    PRIMÄRENERGIEBEDARF_NEU = {}
 
 
 
 
-    # --- Diagramme erstellen ---
-    st.subheader("📈 Dashboard")
 
-    # 1️⃣ Heizkosten Vergleich
-    fig_heizkosten = px.bar(
-        x=["Heizkosten (IST)", "Heizkosten (Luft-WP)"],
-        y=[daten["Heizkosten(IST)"], daten["Heizkosten(Luftwärmepumpe)"]],
-        labels={"x": "System", "y": "Kosten (€)"},
-        title="💰 Heizkosten Vergleich",
-        color=["Heizkosten (IST)", "Heizkosten (Luft-WP)"],
-        color_discrete_map={
-            "Heizkosten (IST)": "#cc0000",
-            "Heizkosten (Luft-WP)": "#0066cc"
-        }
-    )
-    st.plotly_chart(fig_heizkosten, use_container_width=True)
+    df_dach = pd.DataFrame(DACH.items(), columns=["Parameter", "Wert"])
+    df_außenwaende = pd.DataFrame(AUẞENWAENDE.items(), columns=["Parameter", "Wert"])
+    st.subheader(" Dachflächen")  
+    st.dataframe(DACH, use_container_width=True)
+    st.subheader("Außenwände")
+    st.dataframe(AUẞENWAENDE, use_container_width=True)
+    st.subheader("Fenster und Türen")
+    st.dataframe(FENSTER_TUEREN, use_container_width=True)
+    st.subheader("Keller")
+    st.dataframe(KELLER, use_container_width=True)
+    st.subheader("Gebäudegesamtfläche")
+    st.dataframe(GEBAEUDEGESAMTFLAECHE, use_container_width=True)
+    st.subheader("Wärmeverluste")
+    st.dataframe(WAERMEVERLUSTE_ALT, use_container_width=True)
+    st.subheader("Wärmeverluste")
+    st.dataframe(WAERMEVERLUSTE_NEU, use_container_width=True)
 
-    # 2️⃣ CO2 Emissionen Vergleich
-    fig_co2 = px.bar(
-        x=["CO₂ (Heizung IST)", "CO₂ (Luft-WP)"],
-        y=[daten["CO2_Emissionen (Heizung IST)"], daten["CO2_Emissionen(Luftwäremepumpe)"]],
-        labels={"x": "System", "y": "Emissionen (kg CO₂)"},
-        title="🌍 CO₂-Emissionen Heizung",
-        color=["CO₂ (Heizung IST)", "CO₂ (Luft-WP)"],
-        color_discrete_map={
-            "CO₂ (Heizung IST)": "#666666",
-            "CO₂ (Luft-WP)": "#00994d"
-        }
-    )
-    st.plotly_chart(fig_co2, use_container_width=True)
 
-    # 3️⃣ Energieverbrauch pro m²
-    fig_verbrauch = px.bar(
-        x=["Strom (/m²)", "Gas (/m²)"],
-        y=[daten["Stromwert (/m²)"], daten["Gaswert (/m²)"]],
-        labels={"x": "Energieträger", "y": "Verbrauch (/m²)"},
-        title="⚡ Energieverbrauch pro m²",
-        color=["Strom (/m²)", "Gas (/m²)"],
-        color_discrete_map={
-            "Strom (/m²)": "#00ccff",
-            "Gas (/m²)": "#ffaa00"
-        }
-    )
-    st.plotly_chart(fig_verbrauch, use_container_width=True)
 
-    # 4️⃣ Kühlkosten Vergleich
-    fig_kuehlung = px.bar(
-        x=["Kühlkosten neu", "Kühlkosten Klima-Split"],
-        y=[daten["Kühlkostenneu"], daten["Kühlkosten(Klima-Split-Gerät)"]],
-        labels={"x": "System", "y": "Kosten (€)"},
-        title="❄️ Kühlkosten Vergleich",
-        color=["Kühlkosten neu", "Kühlkosten Klima-Split"],
-        color_discrete_map={
-            "Kühlkosten neu": "#ff66cc",
-            "Kühlkosten Klima-Split": "#9933ff"
-        }
-    )
-    st.plotly_chart(fig_kuehlung, use_container_width=True)
 
-    # 5️⃣ CO₂ Emissionen Kühlung
-    fig_co2_kuehlung = px.bar(
-        x=["CO₂ (Passiv)", "CO₂ (Klima-Split)"],
-        y=[daten["CO2_Emissionen(Passivekühlstrom)"], daten["CO2_Emissionen(Klima-Split Gerät)"]],
-        labels={"x": "System", "y": "Emissionen (kg CO₂)"},
-        title="🌡️ CO₂-Emissionen Kühlung",
-        color=["CO₂ (Passiv)", "CO₂ (Klima-Split)"],
-        color_discrete_map={
-            "CO₂ (Passiv)": "#00cc44",
-            "CO₂ (Klima-Split)": "#4444aa"
-        }
-    )
-    st.plotly_chart(fig_co2_kuehlung, use_container_width=True)
+  
 
 
 
