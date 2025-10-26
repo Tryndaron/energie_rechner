@@ -9,7 +9,7 @@ import tempfile
 import plotly.express as px
 import plotly.graph_objects as go
 import fixwerte  # Importiere Fixwerte aus separater Datei
-from fixwerte import df_u_werte
+from u_werte import df_u_werte
 
 
 
@@ -386,15 +386,208 @@ if submitted:
     st.dataframe(KELLER, use_container_width=True)
     st.subheader("Gebäudegesamtfläche")
     st.dataframe(GEBAEUDEGESAMTFLAECHE, use_container_width=True)
-    st.subheader("Wärmeverluste")
+    st.subheader("Wärmeverluste alt")
     st.dataframe(WAERMEVERLUSTE_ALT, use_container_width=True)
-    st.subheader("Wärmeverluste")
+    st.subheader("Wärmeverluste neu")
     st.dataframe(WAERMEVERLUSTE_NEU, use_container_width=True)
 
 
 
 
-  
+
+
+#Ende der App bisher 
+
+
+
+
+
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+)
+from reportlab.pdfgen import canvas
+
+
+# === Farbpalette & Schrift ===
+PRIMARY_COLOR = colors.HexColor("#004C99")
+SECONDARY_COLOR = colors.HexColor("#E6EEF7")
+TEXT_COLOR = colors.HexColor("#333333")
+
+
+# === Kopf- und Fußzeilenfunktion ===
+def header_footer(canvas, doc):
+    canvas.saveState()
+
+    # Kopfzeile
+    canvas.setFont("Helvetica-Bold", 10)
+    canvas.setFillColor(PRIMARY_COLOR)
+    canvas.drawString(2 * cm, 28 * cm, "Energieanalyse & Gebäudebewertung")
+    try:
+        canvas.drawImage("assets/logo.png", 16 * cm, 27.5 * cm, width=3*cm, height=1*cm, mask='auto')
+    except:
+        pass
+
+    # Fußzeile
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(colors.grey)
+    canvas.drawString(2 * cm, 1.5 * cm, f"© {pd.Timestamp.now().year} EnergieRechner GmbH – Alle Rechte vorbehalten")
+    canvas.drawRightString(19 * cm, 1.5 * cm, f"Seite {doc.page}")
+
+    canvas.restoreState()
+
+
+# === Beispiel-Daten ===
+df_flaechen = pd.DataFrame({
+    "Kategorie": ["Dach", "Außenwände", "Keller", "Fenster/Türen"],
+    "Fläche (m²)": [120, 240, 100, 60]
+})
+
+df_verluste = pd.DataFrame({
+    "Bauteil": ["Dach", "Wände", "Fenster/Türen", "Keller"],
+    "Verlust (kWh/a)": [4500, 7200, 2300, 1800]
+})
+
+# === Diagramme ===
+fig1 = px.bar(
+    df_flaechen, x="Kategorie", y="Fläche (m²)",
+    title="Flächenverteilung Gebäudehülle",
+    color="Kategorie",
+    color_discrete_sequence=["#004C99", "#0066CC", "#3385FF", "#66A3FF"]
+)
+fig1.write_image("flaechen.png")
+
+fig2 = px.pie(
+    df_verluste, values="Verlust (kWh/a)", names="Bauteil",
+    title="Anteile am Wärmeverlust",
+    color_discrete_sequence=["#004C99", "#0066CC", "#3385FF", "#66A3FF"]
+)
+fig2.write_image("verluste.png")
+
+
+
+# === Streamlit-Anzeige ===
+selected_categories = st.multiselect(
+    "Wähle Bauteile für die Anzeige:",
+    df_flaechen["Kategorie"].unique(),
+    default=list(df_flaechen["Kategorie"].unique())
+)
+
+filtered_df = df_flaechen[df_flaechen["Kategorie"].isin(selected_categories)]
+fig1_filtered = px.bar(
+    filtered_df, x="Kategorie", y="Fläche (m²)",
+    title="Gefilterte Flächenverteilung",
+    color="Kategorie",
+    color_discrete_sequence=["#004C99", "#0066CC", "#3385FF", "#66A3FF"]
+)
+
+st.plotly_chart(fig1_filtered, use_container_width=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === PDF-Erstellung ===
+def generate_pdf(vorname, nachname, adresse, email):
+    buffer = io.BytesIO()
+    pdf = SimpleDocTemplate(buffer, pagesize=A4,
+                            rightMargin=2 * cm, leftMargin=2 * cm,
+                            topMargin=3 * cm, bottomMargin=2 * cm)
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='SectionTitle', fontSize=14, textColor=PRIMARY_COLOR, leading=16, spaceAfter=12))
+    #styles.add(ParagraphStyle(name='BodyText', fontSize=10, textColor=TEXT_COLOR, leading=14))
+
+    elements = []
+
+    # Titel
+    elements.append(Paragraph("Gebäudeberechnung – Analysebericht", styles['Title']))
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # Kundendaten
+    kontakt = f"<b>Erstellt für:</b><br/>{vorname} {nachname}<br/>{adresse}<br/>{email}"
+    elements.append(Paragraph(kontakt, styles['BodyText']))
+    elements.append(Spacer(1, 0.8 * cm))
+
+    # Abschnitt 1 – Flächen
+    elements.append(Paragraph("1. Flächenanalyse", styles['SectionTitle']))
+
+    table_data = [df_flaechen.columns.to_list()] + df_flaechen.values.tolist()
+    table = Table(table_data, hAlign='LEFT')
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), PRIMARY_COLOR),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("BACKGROUND", (0, 1), (-1, -1), SECONDARY_COLOR),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 0.5 * cm))
+    elements.append(Image("flaechen.png", width=14*cm, height=7*cm))
+    elements.append(PageBreak())
+
+    # Abschnitt 2 – Wärmeverluste
+    elements.append(Paragraph("2. Wärmeverluste", styles['SectionTitle']))
+
+    table_data2 = [df_verluste.columns.to_list()] + df_verluste.values.tolist()
+    table2 = Table(table_data2, hAlign='LEFT')
+    table2.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), PRIMARY_COLOR),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("BACKGROUND", (0, 1), (-1, -1), SECONDARY_COLOR),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+    ]))
+    elements.append(table2)
+    elements.append(Spacer(1, 0.5 * cm))
+    elements.append(Image("verluste.png", width=14*cm, height=7*cm))
+
+    pdf.build(elements, onFirstPage=header_footer, onLaterPages=header_footer)
+    buffer.seek(0)
+    return buffer
+
+
+# === Streamlit UI ===
+st.title("📘 Professioneller Energiebericht")
+
+vorname = st.text_input("Vorname", "Max")
+nachname = st.text_input("Nachname", "Mustermann")
+adresse = st.text_input("Adresse", "Beispielstraße 1, 12345 Musterstadt")
+email = st.text_input("E-Mail", "max@mustermann.de")
+
+if st.button("📄 Bericht erzeugen"):
+    buffer = generate_pdf(vorname, nachname, adresse, email)
+    st.download_button("📥 PDF herunterladen", buffer, "Energiebericht.pdf", "application/pdf")
+
+
+
+
+
+
+
+
+
+
 
 
 

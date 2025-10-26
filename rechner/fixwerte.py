@@ -1,9 +1,5 @@
 import pandas as pd
 
-
-
-
-
 entzugsleistung = 0.04
 erdbohrung_kosten = 120
 energie_quelle_strom = 0.4
@@ -12,6 +8,24 @@ luftwaerme = 2.5
 klima_leistung = 2.5
 passive_cooling_leistung = 0.4
 passive_cooling_stunden = 900
+
+
+#Korrekturwerte Trans.HT
+
+SATTELDACH_DB_AUSGEBAUT = 1.00
+SATTELDACH_DB_NICHTAUSGEBAUT = 0.9
+OGD_DACH_AUSGEBAUT = 1.0
+OGD_DACH_NICHTAUSGEBAUT = 0.8
+WAENDE_UND_DECKEN_ZU_ABSEITEN = 0.8
+WAENDE_UND_DECKEN_ZU_UNBEHEIZTEN_RAEUMEN = 0.5
+WAENDE_UND_DECKEN_ZU_NIEDDRIGBEHEIZTEN_RAEUMEN = 0.35
+KELLERDECKE_KG_UNBEHEIZT = 0.5
+KELLERDECKE_KG_BEHEIZT = 0.9
+KELLERBODEN_UNBEHEIZT = 0.6
+KELLERBODEN_BEHEIZT = 0.6     # Ben nochmal fragen , da hier beheizt und unbeheizt gleich sind
+
+
+
 
 
 
@@ -69,37 +83,9 @@ DACHNEIGUNG_WERTE =  {
 49	:1.5085,
 50	:1.5363,
 51  :1.589,
-
 }
-
-#U-Werte
-
-df_u_werte = pd.read_excel("/home/tryndaron/Schreibtisch/software_projekte/python_projectyx/energie_rechner/rechner/Aaron 16.10.25.xlsx", sheet_name="U-Werte")
-
-print(df_u_werte.columns)
-
-
-df_u_werte = df_u_werte [ [" ", "bis 1918", "ab 1919", "ab 1949", "ab 1958", "ab 1969", "ab 1979", "ab 1984", "ab 1995", 2003]]
-df_u_werte = df_u_werte.iloc[0:28]
-
-print(df_u_werte)
-
-
-
-
-
-
-
 
 
 
 
 #print(DACHNEIGUNG_WERTE[15])
-
-
-""" if heizung == "Gas":
-    kg_co2_alt = gasverbrauch * 0.25
-elif heizung == "Öl":
-    kg_co2_alt = gasverbrauch * 0.6
-else:
-    kg_co2_alt = 0 """
