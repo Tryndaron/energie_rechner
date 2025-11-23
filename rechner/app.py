@@ -9,6 +9,9 @@ import tempfile
 import plotly.express as px
 import plotly.graph_objects as go
 import fixwerte  # Importiere Fixwerte aus separater Datei
+from fixwerte import (SATTELDACH_DB_AUSGEBAUT, SATTELDACH_DB_NICHTAUSGEBAUT, 
+                      OGD_DACH_AUSGEBAUT, OGD_DACH_NICHTAUSGEBAUT,
+                      WAENDE_UND_DECKEN_ZU_ABSEITEN)
 from u_werte import df_u_werte
 
 
@@ -278,6 +281,7 @@ if submitted:
 
     DACH = {
         "Satteldach": math.sqrt((grundrissbreite /2)**2 + dach_hoehe**2) * grundrisslaenge * 2,
+        "Gaubendach": gauben_wand_breite * gauben_wand_tiefe,
         "Flachdach": grundrisslaenge * grundrissbreite,
         "Oberste Geschossdecke": grundrisslaenge * grundrissbreite - 0.5 * (grundrisslaenge - 2*1) * (1 / (math.tan(math.radians(dachneigung)))),  # Annahme: Kniestockhöhe wirkt sich auf die Fläche aus
         "Oberste Geschossdecke mit Dachschrägenbereich": grundrisslaenge * grundrissbreite + 2 * (grundrisslaenge * (grundrissbreite/2 - 1)) * math.tan(math.radians(dachneigung)) ,  #* (grundrissbreite/(2 - 1)) * math.tan(math.radians(dachneigung)),
@@ -321,54 +325,84 @@ if submitted:
         "Nutzfläche": wohnflaeche + ((2*grundrisslaenge + 2*grundrissbreite) * dicke_außenwand_nord ),
     }
 
+
+
 if submitted:
-    WAERMEVERLUSTE_ALT = {
-        #"Dach": DACH["Satteldach"] * df_u_werte.loc[df_u_werte[" "] == "Dach", f"{baujahr}"].values[0],
+   GESAMTVERLUST_DACH = {
+        "Dach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Satteldach"]),
+        "Dach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Satteldach"]),# 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        "Gaubendach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Gaubendach"]),
+        "Gaubendach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Gaubendach"]), # 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        "Oberste Geschossdecke_alt": (int(OGD_DACH_AUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])
+                                      if beheizt == "Ja"
+                                        else int(OGD_DACH_NICHTAUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])), 
+        "AUßenwand_alt": int(WAENDE_UND_DECKEN_ZU_ABSEITEN) * df_u_werte.loc[7, f'{baujahr}'] * int(AUẞENWAENDE["Außenwand Nord"]),
+                                        
     }
 
-if submitted:
-    WAERMEVERLUSTE_NEU = {
-        #"Dach": DACH["Satteldach"] * df_u_werte.loc[df_u_werte[" "] == "Dach", f"{baujahr}"].values[0],
-    }
-
-if submitted:
-    TRANSMISSIONSWAERMEVERLUSTE_ALT = {}
-
-if submitted:
-    TRANSMISSIONSWAERMEVERLUSTE_NEU = {}
-
-if submitted:
-    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST_ALT = {}
 
 
 if submitted:
-    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST_NEU = {}
+    TRANSMISSIONSWAERMEVERLUSTE = {}
 
 
 if submitted:
-    HUELLFLAECHENVERLUST_ALT = {}
+    Dämmschichtdicke = {}
+
+
 
 if submitted:
-    HUELFLAECHENVERLUST_NEU = {}
-
-
-if submitted:
-    WAERMEVERLUSTE_IN_KWH_ALT = {}
+    WB_ZUSCHLAG = {}
 
 if submitted:
-    WAERMEVERLUSTE_IN_KWH_NEU = {}
+    GESAMTTRANSMISSIONSWAERMEVERLUST = {}
 
 if submitted:
-    EFFIZIENZKLASSE_ALT = {}
+    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST = {}
 
 if submitted:
-    EFFIZIENZKLASSE_NEU = {}
+    HUELLFLAECHENVERLUST = {}
 
 if submitted:
-    PRIMÄRENERGIEBEDARF_ALT = {}
+    EFFIZIENZKLASSE = {}
 
 if submitted:
-    PRIMÄRENERGIEBEDARF_NEU = {}
+    ENERGIEBEDARF_DES_GEBAEUDES = {}
+
+if submitted:
+    GESAMTHEIZLAST_IN_KW = {}
+
+###################################################################
+#Heizung Berechnungen
+###################################################################
+
+if submitted:
+    ENERGIEBEDARF_HEIZUNG = {}
+
+if submitted:
+    ENERGIEVERBRAUCH_HEIZUNG = {}
+
+if submitted:
+    JAHRESPRIMAERENERGIEBEDARF_VERBRAUCH = {}
+
+if submitted:
+    JAHRESPRIMAERENERGIEBEDARF_BEDARF = {}
+
+
+####################################################################
+#Invest Berechnungen 
+####################################################################
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -386,10 +420,10 @@ if submitted:
     st.dataframe(KELLER, use_container_width=True)
     st.subheader("Gebäudegesamtfläche")
     st.dataframe(GEBAEUDEGESAMTFLAECHE, use_container_width=True)
-    st.subheader("Wärmeverluste alt")
-    st.dataframe(WAERMEVERLUSTE_ALT, use_container_width=True)
-    st.subheader("Wärmeverluste neu")
-    st.dataframe(WAERMEVERLUSTE_NEU, use_container_width=True)
+    st.subheader("Wärmeverluste dach alt")
+    st.dataframe(GESAMTVERLUST_DACH , use_container_width=True)
+    #st.subheader("Wärmeverluste ")
+    #st.dataframe(WAERMEVERLUSTE_NEU, use_container_width=True)
 
 
 
