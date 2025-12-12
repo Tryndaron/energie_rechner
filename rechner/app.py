@@ -329,21 +329,57 @@ if submitted:
 
 if submitted:
    GESAMTVERLUST_DACH = {
-        "Dach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Satteldach"]),
+        "Dach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * 0.8 * int(DACH["Satteldach"]),
         "Dach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Satteldach"]),# 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
-        "Gaubendach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Gaubendach"]),
+        "Gaubendach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * 0.8 * int(DACH["Gaubendach"]),
         "Gaubendach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Gaubendach"]), # 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
-        "Oberste Geschossdecke_alt": (int(OGD_DACH_AUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])
+        "Oberste Geschossdecke_alt": (int(OGD_DACH_AUSGEBAUT) * 0.6 * int(DACH["Oberste Geschossdecke"])
                                       if beheizt == "Ja"
-                                        else int(OGD_DACH_NICHTAUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])), 
-        "AUßenwand_alt": int(WAENDE_UND_DECKEN_ZU_ABSEITEN) * df_u_werte.loc[7, f'{baujahr}'] * int(AUẞENWAENDE["Außenwand Nord"]),
-                                        
+                                        else int(OGD_DACH_NICHTAUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])),
+        "Oberste Geschossdecke_neu": int(OGD_DACH_AUSGEBAUT) * 0.14 * int(DACH["Oberste Geschossdecke"]), 
+        "AUßenwand_alt":  int(AUẞENWAENDE["Außenwand Nord"]),
+        "AUßenwand_neu":  0.2 * int(AUẞENWAENDE["Außenwand Nord"]), # 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        "Giebelwand_alt":  int(AUẞENWAENDE["Giebelwand"]),
+        "Giebelwand_neu":  0.2 * int(AUẞENWAENDE["Giebelwand"]), 
+        "Gaubenwand_alt":  int(AUẞENWAENDE["Gaubenwand"]),
+        "Dachfenster_alt":  2.7 * int(FENSTER_TUEREN["Dachfenster"]),
+        "Dachfenster_neu":   int(FENSTER_TUEREN["Dachfenster"]),
+        "Fenster_alt":  2.7 * int(FENSTER_TUEREN["Fenster"]),
+        "Fenster_neu":  0.95 * int(FENSTER_TUEREN["Fenster"]),
+        "Außentueren_alt":  3.5 * int(FENSTER_TUEREN["Türen"]),
+        "Außentueren_neu": 1.3 * int(FENSTER_TUEREN["Türen"]),
+        "Kellerdecke_alt":  int(Hoehe_kellergeschoß),
+        "Kellerdecke_neu": 0.25 * int(Hoehe_kellergeschoß),
+        "Kelleraußenwand_alt": 0,
+        "Kelleraußenwand_neu": 0,
+        "Kellerinnenwand_alt": 0,
+        "Kellerinnenwand_neu": 0,
+        "Kellerfenster_alt": 0,
+        "Kellerfenster_neu": 0,
+        "Kellerboden_alt": 0,
+        "Kellerboden_neu": 0,
+
+
     }
 
-
+print(GESAMTVERLUST_DACH["Dach_alt"])
 
 if submitted:
-    TRANSMISSIONSWAERMEVERLUSTE = {}
+    TRANSMISSIONSWAERMEVERLUSTE = {
+        "Dach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Dach_alt"]) * 4000 / 1000, #* int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Satteldach"]),
+        "Dach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Dach_neu"]) * 2500 / 1000,
+        "Gaubendach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Gaubendach_alt"]) * 4000 / 1000,
+        "Gaubendach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Gaubendach_neu"]) * 2400 / 1000,
+        "Oberste_Geschossdecke_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Oberste Geschossdecke_alt"]) * 3000 / 1000,
+        "Oberste_Geschossdecke_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Oberste Geschossdecke_neu"]) * 1500 / 1000,
+        "Außenwaende_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["AUßenwand_alt"]) * 3500 / 1000,
+        "Außenwaende_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["AUßenwand_neu"]) * 1200 / 1000,
+        "Giebelwand_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Giebelwand_alt"]) * 2400 / 1000,
+
+        #"Dach_transmissionswaermeverlust": TRANSMISSIONSWAERMEVERLUSTE["Dach_waermeverlust"] * 30 * 4000 / 1000,
+        #"Gaubendach_waermeverlust": 0.8 * GESAMTVERLUST_DACH["Gaubendach_alt"],
+        #"Gaubendach_transmissionswaermeverlust": TRANSMISSIONSWAERMEVERLUSTE["Gaubendach_waermeverlust"] * 30 * 4000 / 1000,
+    }
 
 
 if submitted:
@@ -412,18 +448,79 @@ if submitted:
     df_außenwaende = pd.DataFrame(AUẞENWAENDE.items(), columns=["Parameter", "Wert"])
     st.subheader(" Dachflächen")  
     st.dataframe(DACH, use_container_width=True)
+
+
     st.subheader("Außenwände")
     st.dataframe(AUẞENWAENDE, use_container_width=True)
+
+
     st.subheader("Fenster und Türen")
     st.dataframe(FENSTER_TUEREN, use_container_width=True)
+
+
     st.subheader("Keller")
     st.dataframe(KELLER, use_container_width=True)
+
+
     st.subheader("Gebäudegesamtfläche")
     st.dataframe(GEBAEUDEGESAMTFLAECHE, use_container_width=True)
+
+
     st.subheader("Wärmeverluste dach alt")
     st.dataframe(GESAMTVERLUST_DACH , use_container_width=True)
-    #st.subheader("Wärmeverluste ")
-    #st.dataframe(WAERMEVERLUSTE_NEU, use_container_width=True)
+
+
+    st.subheader("Transmissionswärmeverluste")
+    st.dataframe(TRANSMISSIONSWAERMEVERLUSTE , use_container_width=True)
+
+
+    st.subheader("Dämmschichtdicke")
+    st.dataframe(Dämmschichtdicke , use_container_width=True)
+
+    
+    st.subheader("Wärmebrückenzuschlag")
+    st.dataframe(WB_ZUSCHLAG , use_container_width=True)
+
+
+    st.subheader("Gesamttransmissionswärmeverlust")
+    st.dataframe(GESAMTTRANSMISSIONSWAERMEVERLUST , use_container_width=True)
+
+
+    st.subheader("Spezifischer Transmissionswärmeverlust")
+    st.dataframe(SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST , use_container_width=True)
+
+
+    st.subheader("Hüllflächenverlust")
+    st.dataframe(HUELLFLAECHENVERLUST , use_container_width=True)
+
+
+    st.subheader("Effizienzklasse")
+    st.dataframe(EFFIZIENZKLASSE , use_container_width=True)
+
+
+    st.subheader("Energiebedarf des Gebäudes")
+    st.dataframe(ENERGIEBEDARF_DES_GEBAEUDES , use_container_width=True)
+
+
+    st.subheader("Gesamtheizlast in kW")
+    st.dataframe(GESAMTHEIZLAST_IN_KW , use_container_width=True)
+
+
+    st.subheader("Energiebedarf Heizung")
+    st.dataframe(ENERGIEBEDARF_HEIZUNG , use_container_width=True)
+
+
+    st.subheader("Energieverbrauch Heizung")
+    st.dataframe(ENERGIEVERBRAUCH_HEIZUNG , use_container_width=True)
+
+
+    st.subheader("Jahresprimärenergiebedarf Verbrauch")
+    st.dataframe(JAHRESPRIMAERENERGIEBEDARF_VERBRAUCH , use_container_width=True)
+
+
+    st.subheader("Jahresprimärenergiebedarf Bedarf")
+    st.dataframe(JAHRESPRIMAERENERGIEBEDARF_BEDARF , use_container_width=True)
+    
 
 
 
