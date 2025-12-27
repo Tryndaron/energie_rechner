@@ -6,8 +6,10 @@ import pandas as pd
 #U-Werte 
 
 df_u_werte = pd.read_excel("/home/tryndaron/Schreibtisch/software_projekte/python_projectyx/energie_rechner/rechner/Aaron 16.10.25.xlsx", sheet_name="U-Werte")
-df_u_werte = df_u_werte [ [" ", "bis 1918", "ab 1919", "ab 1949", "ab 1958", "ab 1969", "ab 1979", "ab 1984", "ab 1995", 2003]]
+df_u_werte = df_u_werte[[" ", "bis 1918", "ab 1919", "ab 1949", "ab 1958", "ab 1969", "ab 1979", "ab 1984", "ab 1995", 2003]]
 df_u_werte = df_u_werte.iloc[0:28]
+
+#df_u_werte["2025"] = [0.24, 0.24, 0.24, 0.24, 0.24, 0.20, 0.20, 0.16]
 
 
 
@@ -37,7 +39,7 @@ u_wert_GEG.reset_index(drop=True, inplace=True)
 
 
 
-print(u_wert_GEG)
+#print(u_wert_GEG)
 
 
 

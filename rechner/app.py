@@ -328,53 +328,93 @@ if submitted:
 
 
 if submitted:
-   GESAMTVERLUST_DACH = {
+   GESAMTVERLUST_DACH_ALT = {
         "Dach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * 0.8 * int(DACH["Satteldach"]),
-        "Dach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Satteldach"]),# 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        
         "Gaubendach_alt":  int(SATTELDACH_DB_AUSGEBAUT) * 0.8 * int(DACH["Gaubendach"]),
-        "Gaubendach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Gaubendach"]), # 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        
         "Oberste Geschossdecke_alt": (int(OGD_DACH_AUSGEBAUT) * 0.6 * int(DACH["Oberste Geschossdecke"])
                                       if beheizt == "Ja"
                                         else int(OGD_DACH_NICHTAUSGEBAUT) * df_u_werte.loc[3, f'{baujahr}'] * int(DACH["Oberste Geschossdecke"])),
-        "Oberste Geschossdecke_neu": int(OGD_DACH_AUSGEBAUT) * 0.14 * int(DACH["Oberste Geschossdecke"]), 
+        
         "AUßenwand_alt":  int(AUẞENWAENDE["Außenwand Nord"]),
-        "AUßenwand_neu":  0.2 * int(AUẞENWAENDE["Außenwand Nord"]), # 0.14 bezeichnet den Uwert von 2025 der noch nachgetragen werden muss
+        
         "Giebelwand_alt":  int(AUẞENWAENDE["Giebelwand"]),
-        "Giebelwand_neu":  0.2 * int(AUẞENWAENDE["Giebelwand"]), 
-        "Gaubenwand_alt":  int(AUẞENWAENDE["Gaubenwand"]),
+        
+        "Gaubenwand_alt":   int(AUẞENWAENDE["Gaubenwand"]),
+        
         "Dachfenster_alt":  2.7 * int(FENSTER_TUEREN["Dachfenster"]),
-        "Dachfenster_neu":   int(FENSTER_TUEREN["Dachfenster"]),
+        
         "Fenster_alt":  2.7 * int(FENSTER_TUEREN["Fenster"]),
-        "Fenster_neu":  0.95 * int(FENSTER_TUEREN["Fenster"]),
+        
         "Außentueren_alt":  3.5 * int(FENSTER_TUEREN["Türen"]),
-        "Außentueren_neu": 1.3 * int(FENSTER_TUEREN["Türen"]),
+        
         "Kellerdecke_alt":  int(Hoehe_kellergeschoß),
-        "Kellerdecke_neu": 0.25 * int(Hoehe_kellergeschoß),
+        
         "Kelleraußenwand_alt": 0,
-        "Kelleraußenwand_neu": 0,
+        
         "Kellerinnenwand_alt": 0,
-        "Kellerinnenwand_neu": 0,
+        
         "Kellerfenster_alt": 0,
-        "Kellerfenster_neu": 0,
+        
         "Kellerboden_alt": 0,
+    }
+   
+if submitted:
+    GESAMTVERLUST_DACH_NEU = {
+        "Dach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Satteldach"]),
+        "Gaubendach_neu":  int(SATTELDACH_DB_AUSGEBAUT) * 0.14 * int(DACH["Gaubendach"]),
+        "Oberste Geschossdecke_neu": int(OGD_DACH_AUSGEBAUT) * 0.14 * int(DACH["Oberste Geschossdecke"]),
+        "AUßenwand_neu":  0.2 * int(AUẞENWAENDE["Außenwand Nord"]),
+        "Giebelwand_neu":  0.2 * int(AUẞENWAENDE["Giebelwand"]),
+        "Gaubenwand_neu": 0.2 * int(AUẞENWAENDE["Gaubenwand"]),
+        "Dachfenster_neu":   int(FENSTER_TUEREN["Dachfenster"]),
+        "Fenster_neu":  0.95 * int(FENSTER_TUEREN["Fenster"]),
+        "Außentueren_neu": 1.3 * int(FENSTER_TUEREN["Türen"]),
+        "Kellerdecke_neu": 0.25 * int(Hoehe_kellergeschoß),
+        "Kelleraußenwand_neu": 0,
+        "Kellerinnenwand_neu": 0,
+        "Kellerfenster_neu": 0,
         "Kellerboden_neu": 0,
-
-
     }
 
-print(GESAMTVERLUST_DACH["Dach_alt"])
+if submitted:
+    GESAMTWAERMEVERLUST = {
+        "Gesamtwaermeverlust_alt": sum(GESAMTVERLUST_DACH_ALT.values()),
+        "Gesamtwaermeverlust_neu": sum(GESAMTVERLUST_DACH_NEU.values()),
+    }
+
+
+#print(GESAMTVERLUST_DACH["Dach_alt"])
 
 if submitted:
     TRANSMISSIONSWAERMEVERLUSTE = {
-        "Dach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Dach_alt"]) * 4000 / 1000, #* int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Satteldach"]),
-        "Dach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Dach_neu"]) * 2500 / 1000,
-        "Gaubendach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Gaubendach_alt"]) * 4000 / 1000,
-        "Gaubendach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Gaubendach_neu"]) * 2400 / 1000,
-        "Oberste_Geschossdecke_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Oberste Geschossdecke_alt"]) * 3000 / 1000,
-        "Oberste_Geschossdecke_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["Oberste Geschossdecke_neu"]) * 1500 / 1000,
-        "Außenwaende_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["AUßenwand_alt"]) * 3500 / 1000,
-        "Außenwaende_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH["AUßenwand_neu"]) * 1200 / 1000,
-        "Giebelwand_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH["Giebelwand_alt"]) * 2400 / 1000,
+        "Dach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Dach_alt"]) * 4000 / 1000, #* int(SATTELDACH_DB_AUSGEBAUT) * df_u_werte.loc[2, f'{baujahr}'] * int(DACH["Satteldach"]),
+        "Dach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Dach_neu"]) * 2500 / 1000,
+        "Gaubendach_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Gaubendach_alt"]) * 4000 / 1000,
+        "Gaubendach_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Gaubendach_neu"]) * 2400 / 1000,
+        "Oberste_Geschossdecke_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Oberste Geschossdecke_alt"]) * 3000 / 1000,
+        "Oberste_Geschossdecke_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Oberste Geschossdecke_neu"]) * 1500 / 1000,
+        "Außenwaende_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["AUßenwand_alt"]) * 3500 / 1000,
+        "Außenwaende_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["AUßenwand_neu"]) * 1200 / 1000,
+        "Giebelwand_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Giebelwand_alt"]) * 2400 / 1000,
+        "Gaubenwand_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Gaubenwand_alt"]) * 4000 / 1000,
+        "Gaubenwand_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Gaubenwand_neu"]) * 2400 / 1000,
+        "Dachfenster_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Dachfenster_alt"]) * 2700 / 1000,
+        "Fenster_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Fenster_alt"]) * 2700 / 1000,
+        "Außentueren_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Außentueren_alt"]) * 4000 / 1000,
+        "Außentueren_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Außentueren_neu"]) * 2400 / 1000,
+        "Kellerdecke_transmissions_waermeverlust_alt": 30 * int(GESAMTVERLUST_DACH_ALT["Kellerdecke_alt"]) * 4000 / 1000,
+        "Kellerdecke_transmissions_waermeverlust_neu": 30 * int(GESAMTVERLUST_DACH_NEU["Kellerdecke_neu"]) * 2400 / 1000,
+
+        "Kelleraußenwand_transmissions_waermeverlust_alt": 0,
+        "Kelleraußenwand_transmissions_waermeverlust_neu": 0,
+        "Kellerinnenwand_transmissions_waermeverlust_alt": 0,
+        "Kellerinnenwand_transmissions_waermeverlust_neu": 0,
+        "Kellerboden_transmissions_waermeverlust_alt": 0,
+        "Kellerboden_transmissions_waermeverlust_neu": 0,
+
+
 
         #"Dach_transmissionswaermeverlust": TRANSMISSIONSWAERMEVERLUSTE["Dach_waermeverlust"] * 30 * 4000 / 1000,
         #"Gaubendach_waermeverlust": 0.8 * GESAMTVERLUST_DACH["Gaubendach_alt"],
@@ -383,24 +423,65 @@ if submitted:
 
 
 if submitted:
-    Dämmschichtdicke = {}
+    Dämmschichtdicke = {
+        "Dach_dämmung": 0.035 * 7.14,
+        "Gaubendach_dämmung": 0.035 * 7.14,
+        "Oberste_Geschossdecke_dämmung": 0.035 * 7.14,
+        "Außenwand_dämmung": 0.035 * 5.0,
+        "Giebelwand_dämmung": 0.035 * 5.0,
+        "Gaubenwand_dämmung": 0.035 * 5.0,
+        "Dachfenster_dämmung": 1.0,
+        "Fenster_dämmung": 0.95,
+        "Außentueren_dämmung": 1.3,
+        "Kellerdecke_dämmung": 0.035 * 0.25,
+        "Kelleraußenwand_dämmung": 0.035 * 0.25,
+        "Kellerinnenwand_dämmung": 0.035 * 0.25,
+        "Kellerfenster_dämmung": 0.95,
+        "Kellerboden_dämmung": 0.035 * 0.25,
+    }
 
 
 
 if submitted:
-    WB_ZUSCHLAG = {}
+    WB_ZUSCHLAG = {
+        "Waermebrückenzuschlag 1_alt": 0.1 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Waermebrückenzuschlag 1_neu": 0.1 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+        "Waermebrückenzuschlag 2_alt": 0.05 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Waermebrückenzuschlag 2_neu": 0.05 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+        "Waermebrückenzuschlag 3_alt": 0.03 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Waermebrückenzuschlag 3_neu": 0.03 * GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+    }
 
 if submitted:
-    GESAMTTRANSMISSIONSWAERMEVERLUST = {}
+    GESAMTTRANSMISSIONSWAERMEVERLUST = {
+        "Gesamttransmissionswäremverlust 1_alt": WB_ZUSCHLAG["Waermebrückenzuschlag 1_alt"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Gesamttransmissionswäremverlust 1_neu": WB_ZUSCHLAG["Waermebrückenzuschlag 1_neu"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+        "Gesamttransmissionswäremverlust 2_alt": WB_ZUSCHLAG["Waermebrückenzuschlag 2_alt"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Gesamttransmissionswäremverlust 2_neu": WB_ZUSCHLAG["Waermebrückenzuschlag 2_neu"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+        "Gesamttransmissionswäremverlust 3_alt": WB_ZUSCHLAG["Waermebrückenzuschlag 3_alt"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_alt"],
+        "Gesamttransmissionswäremverlust 3_neu": WB_ZUSCHLAG["Waermebrückenzuschlag 3_neu"] + GESAMTWAERMEVERLUST["Gesamtwaermeverlust_neu"],
+    }
 
 if submitted:
-    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST = {}
+    SPEZIFISCHER_TRANSMISSIONSWAERMEVERLUST = {
+        "Spezifischer Transmissionswärmeverlust 1_alt": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 1_alt"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+        "Spezifischer Transmissionswärmeverlust 1_neu": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 1_neu"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+        "Spezifischer Transmissionswärmeverlust 2_alt": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 2_alt"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+        "Spezifischer Transmissionswärmeverlust 2_neu": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 2_neu"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+        "Spezifischer Transmissionswärmeverlust 3_alt": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 3_alt"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+        "Spezifischer Transmissionswärmeverlust 3_neu": GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 3_neu"] / GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"],
+    }
 
 if submitted:
-    HUELLFLAECHENVERLUST = {}
+    HUELLFLAECHENVERLUST = {
+
+    }
 
 if submitted:
-    EFFIZIENZKLASSE = {}
+    EFFIZIENZKLASSE = {
+        "Effiziensklasse_alt": GEBAEUDEGESAMTFLAECHE["Hüllfläche schrägdach"] * 30 * 3170 / 1000 / (GEBAEUDEGESAMTFLAECHE["Beheizte Fläche"] + 31),
+        "Effiziensklasse_neu": (GESAMTTRANSMISSIONSWAERMEVERLUST["Gesamttransmissionswäremverlust 3_neu"] * 2400 * 30) / (GEBAEUDEGESAMTFLAECHE["Nutzfläche"] * 1000),
+    }
 
 if submitted:
     ENERGIEBEDARF_DES_GEBAEUDES = {}
@@ -412,17 +493,46 @@ if submitted:
 #Heizung Berechnungen
 ###################################################################
 
-if submitted:
-    ENERGIEBEDARF_HEIZUNG = {}
+HEIZLAST_ALT = 19.65
+HEIZLAST_NEU = 6.87
+INTERNE_WAERMEGEWINNE_alt = 0.44
+INTERNE_WAERMEGEWINNE_NEU = 0.44
+WARMWASSER_alt = 0.5
+WARMWASSER_NEU = 0.5
+
 
 if submitted:
-    ENERGIEVERBRAUCH_HEIZUNG = {}
+    ENERGIEBEDARF_HEIZUNG = {
+        "Heizlast(Netto)_alt": HEIZLAST_ALT - INTERNE_WAERMEGEWINNE_alt - WARMWASSER_alt,
+        "Heizlast(Netto)_neu": HEIZLAST_NEU - INTERNE_WAERMEGEWINNE_NEU - WARMWASSER_NEU,
+        "Waermegewinn_alt": INTERNE_WAERMEGEWINNE_alt,
+        "Waermegewinn_neu": INTERNE_WAERMEGEWINNE_NEU,
+        "zusaetzliche_Heizlast_WW_alt": WARMWASSER_alt,
+        "zusaetzliche_Heizlast_WW_neu": WARMWASSER_NEU,
+        "Heizlast_brutto_alt": HEIZLAST_ALT,
+        "Heizlast_brutto_neu": HEIZLAST_NEU,
+
+
+    }
 
 if submitted:
-    JAHRESPRIMAERENERGIEBEDARF_VERBRAUCH = {}
+    ENERGIEVERBRAUCH_HEIZUNG = {
+
+    }
 
 if submitted:
-    JAHRESPRIMAERENERGIEBEDARF_BEDARF = {}
+    JAHRESPRIMAERENERGIEBEDARF_VERBRAUCH = {
+        "Qh": Gas,
+        "Qw": Gas * 0.18,
+    }
+
+if submitted:
+    JAHRESPRIMAERENERGIEBEDARF_BEDARF = {
+        "Qh_bedarf_soll_verbrauch": (HEIZLAST_ALT - INTERNE_WAERMEGEWINNE_alt - WARMWASSER_alt) * 2400,
+        "Qw_bedarf_soll_verbrauch": (HEIZLAST_ALT - INTERNE_WAERMEGEWINNE_alt - WARMWASSER_alt) * 2400 * 0.18,
+        "Qh_bedarf_soll_bedarf": (HEIZLAST_NEU - WARMWASSER_NEU) * 2400,
+        "Qw_bedarf_soll_bedarf": (HEIZLAST_NEU - WARMWASSER_NEU) * 2400 * 0.3,
+    }
 
 
 ####################################################################
@@ -466,9 +576,14 @@ if submitted:
     st.dataframe(GEBAEUDEGESAMTFLAECHE, use_container_width=True)
 
 
-    st.subheader("Wärmeverluste dach alt")
-    st.dataframe(GESAMTVERLUST_DACH , use_container_width=True)
+    st.subheader("Wärmeverluste dach Alt")
+    st.dataframe(GESAMTVERLUST_DACH_ALT , use_container_width=True)
 
+    st.subheader("Wärmeverluste dach Neu")
+    st.dataframe(GESAMTVERLUST_DACH_NEU , use_container_width=True)
+
+    st.subheader("Gesamtwärmeverlust")
+    st.dataframe(GESAMTWAERMEVERLUST , use_container_width=True)
 
     st.subheader("Transmissionswärmeverluste")
     st.dataframe(TRANSMISSIONSWAERMEVERLUSTE , use_container_width=True)
